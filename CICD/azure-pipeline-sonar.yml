@@ -1,0 +1,51 @@
+# Section defines when pipeline should run automatically
+trigger:
+  batch: true
+  branches:
+    include:
+      - develop
+  paths:
+    include:
+      - src/**
+    exclude:
+      - README.md
+      - sonar.yaml
+      - azure-pipeline-aks.yaml
+
+# section defines how to handle PRs raised for specific branches
+pr:
+  autoCancel: true
+  branches:
+    include:
+      - "develop"
+      - "release/**"
+      - "sit"
+
+# Name of each pipeline run - 20241119.4-release/9.16.0
+name: $(Date:yyyyMMdd)$(Rev:.r)$(SourceBranchName)
+
+# Agent to execute the pipeline
+pool: 
+  vmImage: 'Windows-latest'
+
+# Additional repository this pipeline depends upon
+resources:
+  repositories:
+    - repository: CB.DevJournal
+      type: githubenterprise
+      endpoint: git.CB
+      name: VarunTej06/CB.Payment
+      ref: release/9.16.0
+
+# Variables to be used from AZ Library
+variables:
+  - group: BDScan-vg
+
+stages:
+  - template: AzurePipeline/codequality-template.yaml@CB>DevJournal
+    parameters:
+      projectBuildName: 'CB.Payment'
+      sourceBranchName: $(Build.SourceBranch)
+      cbDiscoUuid: $(cb-payment-disco-uuid)
+      cbDiscoToken: $(cb-payment-disco-token)
+# These parameters are passed to the code quality template yaml file

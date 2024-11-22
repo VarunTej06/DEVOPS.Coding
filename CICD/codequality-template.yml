@@ -1,0 +1,48 @@
+parameters:
+# parameters are from azure-pipeline-sonar.yml file
+- name: projectBuildName
+  type: string
+- name: sourceBranchName
+  type: string
+- name: cbDiscoUuid
+  type: string
+- name: cbDiscoToken
+  type: string
+
+stages:
+  - stage: PreBuild
+    displayName: CodeQuality
+    jobs:
+      - job: SONAR
+        displayName: SONAR
+        steps:
+          - task: DotNetCoreCLI@2
+            displayName: Build
+            inputs: 
+              command: build
+              projects: '**./*.sln'
+
+          - task: DotNetCoreCLI@2
+            displayName: Unit Test
+            inputs: 
+              command: test
+              projects: '**./*[Uu]nit*.csproj' # Can give multiple Projects as well
+              
+          - task: SonarQubeAnalyze
+            displayName: Sonar Qube Analysis
+            inputs:
+          
+          - task: SonarQubePublish
+            displayName: Sonar Qube Publish
+            inputs:
+
+      - job: BD Scan
+        displayName: BDScan
+        steps: # If you have a template file for doing BD Scan then we need to use template instead of task.
+          - task: DotNetCoreCLI@2
+            displayName: Build
+            inputs: 
+            command: build
+            projects: '**./*.sln'
+
+# Similarly can write Jobs for Megalinter - Source Code Syntax

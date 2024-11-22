@@ -1,0 +1,42 @@
+pipeline {
+    agent {
+    docker {
+      image 'abhishekf5/maven-abhishek-docker-agent:v1'
+      args '--user root -v /var/run/docker.sock:/var/run/docker.sock' // mount Docker socket to access the host's Docker daemon
+    }
+    
+    stages {
+        stage ('Git Checkout') {
+            steps {
+                apt install git -y
+                git clone URL
+                cd Work_Dir
+            }
+        }
+        stage ('Build') {
+            steps {
+                apt install dotnet
+                dotnet build 
+                cd 
+                dotnet publish
+            }
+        }
+        stage ('Test') {
+            steps {
+                apt install 
+                cd 
+                dotnet test path_to unit_test
+            }
+        }
+        stage ('Publish build Artifactory') {
+            steps {
+                
+            }
+        }
+        stage ('Update Manifest YAML') {
+            steps {
+
+            }
+        }
+    }
+}

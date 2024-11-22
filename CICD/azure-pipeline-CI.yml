@@ -1,0 +1,82 @@
+trigger:
+  batch: true
+  branches:
+  - develop
+  paths:
+    include:
+      - src/**
+    exclude:
+      - README.md
+      - sonar.yaml
+      - ci-aks.yml
+pr: none
+
+name: $(Date:yyyyMMdd)$(Rev:.r)$(SourceBranchName)
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  - group: 'CB.BE.Build' # Here we have the ACR Name & PassPhrase
+  - name: tag
+    value: v$(Build.SourceBranchName).$(Build.BuilID) 
+  - name: K8-deployment-yml-location
+    value: /cb.Payment/cb.Payment.RestService/k8s/
+  - name: K8-deployment-yml-filename
+    value: cbpayment*-deployment.yaml
+  - name: docker-image-name
+    value: cb.payment
+
+resources: # repository for Bash Script
+  repositories:
+    - repository: CB.DevJournal
+      type: githubenterprise
+      endpoint: git.CB
+      name: VarunTej06/CB.Payment
+      ref: release/9.16.0
+
+stages:
+  - stage: Build and Push
+    displayName: Build and push Image
+    jobs:
+      - job: Build and Push
+        displayName: Build and Push
+        steps:
+          - task: Docker@2
+            displayName: Login to Container Registry
+            inputs:
+              containeRegistry: 'Azure COntainer Registry'
+              command: login
+
+          - task: Docker@2
+            displayName: Build Docker Image
+            inputs:
+              containeRegistry: 'Azure Container Registry'
+              command: Build
+              Dockerfile: '**/Dockerfile'
+              tags: $(tag)
+              arguments: 'ACCESSTOKEN=$(System.AccessToken)' # can pass any number of arguments to the docker file
+
+          - task: Docker@2
+            displayName: Push Docker Image to ACR
+            inputs:
+              containeRegistry: 'Azure Container Registry'
+              repository: '$(docker-image-name)'
+              command: push
+              tags: $(tag)
+              arguments: 'ACCESSTOKEN=$(System.AccessToken)' # can pass any number of arguments to the docker file
+
+  - stage: Update 
+    displayName: Update YAML manifests
+    jobs:
+      - job: Update
+        displayName: Update manifests
+        steps:
+          - checkout: CB.DevJournal
+          - checkout: self
+          - task: ShellScript@2
+            displayName: Update YAML Manifest files with ACR Image tag
+            inputs: 
+              scriptPath: 'scipts/updatek8sManifest.sh'
+              args: '$(docker-image-name) $(tag)' # Pass any number of arguments
+        
