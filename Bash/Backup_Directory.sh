@@ -22,4 +22,4 @@ echo "Backcompleted: $filename"
 
 # If executed as root user then it will work. 
 # If executed as user - It will fail. 
-# To work for Super user
+# To execute the script other than as a root user, add hte user into sudeors file or add user to sudo group using chmod
