@@ -3,6 +3,7 @@
 set -x # Runs script in debug mode
 
 set -e # exists scripts when there is an error
+trap 'echo "Error occured at line $LINENO"' ERR  # catches the error and prints the ;ine number where error occured
 
 set -o pipefail # checks for piep errors that are missed in above command
 
@@ -46,3 +47,12 @@ echo "Customer age: $cust_age"
 # CLI Command: ./filename then it will ask you to enter arguments
 
 set +x #To turn off Debug mode
+
+# Sample -4: Checking exit status code for a command
+mkdir pumpkin
+
+if [ $? -eq 0 ]; then 
+  echo "Command successful"
+else
+  echo "Command failed"
+fi
