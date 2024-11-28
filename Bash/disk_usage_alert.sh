@@ -16,5 +16,5 @@ if [ $usage -gt $threshold ]; then
 echo "Disk usage is $usage%, sending alert"
 # uncomment below line to send email alert but requires email setup
 # echo "Disk usage alert $usage" | mail -s "Disk usage warning" varuntej1045@gmail.com
-# string inside echo is the body of the email. -s will be passed as subjetc of the email. 
+# string inside echo is the body of the email. -s will be passed as subject of the email. 
 fi

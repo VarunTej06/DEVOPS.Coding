@@ -1,4 +1,12 @@
 # Section defines when pipeline should run automatically
+schedules:
+  cron: "0 0 * * *"
+  displayName: Daily Midnight build
+  branches:
+    include:
+      - develop
+  always: true # Irrespective of chnages in codebase need to trigger everytime for cron format defined even without code changes
+
 trigger:
   batch: true
   branches:
