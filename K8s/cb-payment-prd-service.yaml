@@ -1,0 +1,14 @@
+# YAML file for PRoduction. Create same YAML file by updating few variables in this file for dev, sit, uat, pre-pod
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: cb-prd
+  name: cbpayment-backend
+spec:
+  type: ClusterIP
+  selector:
+    app: cbpayment
+  ports:
+    - port: 22105
+      targetPort: 8080
+      protocol: TCP

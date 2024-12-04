@@ -1,0 +1,34 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cbpayment-ingress
+  namespace: cb-prd
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"  # Redirect HTTP to HTTPS
+    nginx.ingress.kubernetes.io/rewrite-target: "/"    # Optional: rewrite the target for paths
+    nginx.ingress.kubernetes.io/whitelist-source-range: "203.0.113.0/24, 8.8.8.8/32"  # Whitelisted IPs (example: replace with actual Google IP ranges)
+    nginx.ingress.kubernetes.io/canary: "true"         # Enable canary
+    nginx.ingress.kubernetes.io/canary-weight: "20"    # Route 20% of traffic to the canary version
+spec:
+  rules:
+    - host: crickbuzz.com
+      http:
+        paths:
+          - path: /  # Specify the path for routing, can be more specific
+            pathType: Prefix
+            backend:
+              service:
+                name: your-service
+                port:
+                  number: 80
+          - path: /canary  # Path for the canary version
+            pathType: Prefix
+            backend:
+              service:
+                name: your-canary-service
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - crickbuzz.com
+      secretName: cb-prd-tls-secret  # Ensure you have a TLS secret configured for HTTPS

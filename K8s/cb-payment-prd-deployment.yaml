@@ -1,0 +1,102 @@
+# YAML file for PRoduction. Create same YAML file by updating few variables in this file for dev, sit, uat, pre-pod
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: cb-prd
+  name: cbpayment
+  labels:
+    app: cbpayment
+spec:
+  replicas: 10 # 1 for all non-prd env
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: cbpayment
+  template:
+    metadata:
+      labels:
+        app: cbpayment
+        tags.datadoghq.com/env: prd
+        tags.datadoghq.com/service: cbpayment-backend
+        tags.datadoghq.com/version: ${Release.ReleaseName}#  # we used #{Release.ReleaseName} - this is not supported in this YAML templating system.
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+      containers:
+        - name: cbpayment
+          image: dcbvxstacr001.azurecr.io/cb.payment:v#{Build.SourceBranchName}#.#{Build.BuildId}#
+          envFrom:
+            - secretRef:
+                name: prd-secrets
+          volumeMounts:
+            - name: certificates
+              mountPath: /app/certificates
+            - name: azure
+              mountPath: /app/EmailTemplates
+            - name: azurelogs
+              mountPath: /app/logs
+          env:
+            - name: COMPlus_gcServer
+              value: '0'
+            - name: slackApiUrl
+              value: https:hooks,slack.com/services/
+            - name: EnableSlackNotification
+              value: 'false'
+            - name: SmtpHost
+              value: 12.13.123.44
+            - name: SmtpPort
+              value: '25'
+            - name: TZ
+              value: Asia/Singapore
+            - name: EmailFrom
+              value: cb-support@crickbuz.com
+            - name: EmailTo
+              value: var@infy.com;pool-id.rass_cb_app@crickbuz.com;devops_engineer@crickbuz.com
+          resources:
+            limits:
+              memory: 3Gi  # no resource section in non-prd env
+              cpu: '1'
+            requests:
+              memory: 0.5Gi
+              cpu: 100m
+          ports:
+            - containerPort: 8080
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            failureThreshold: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 8
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 300
+            periodSeconds: 30
+            failureThreshold: 8
+            timeoutSeconds: 5
+      volumes:
+        - name: azure
+          persistentVolumeClaim:
+            claimName: azure-prd-cb-payment-file
+        - name: azurelogs
+          persistentVolumeClaim:
+            claimName: aks-cb-prd-logs-share-new
+        - name: certificates
+          persistentVolumeClaim:
+            claimName: aks-cb-prd-certificates-share
+      automountServiceAccountToken: false

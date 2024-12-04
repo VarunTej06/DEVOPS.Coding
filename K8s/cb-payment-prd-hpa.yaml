@@ -1,0 +1,38 @@
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  namespace: cb-prd
+  name: cbpayment
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: cbpayment
+  minReplicas: 6
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: 
+          type: Utilization
+          averageUtilization: 60
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: AverageValue
+          averageValue: 0.7Gi
+  behavior:
+    scaleDown:
+      policies:
+        - type: Pods``
+          value: 1
+          periodSeconds: 180
+      stabilizationWindowSeconds: 600
+    scaleUp:
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+      stabilizationWindowSeconds: 0
