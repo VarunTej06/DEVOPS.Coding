@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ingress-egress-policy
+  namespace: cb-prd  # You can specify the desired namespace here
+spec:
+  podSelector: {}  # Apply to all pods in the namespace. If you want to restrict to certain pods, use labels.
+  ingress:
+    - from:
+        - ipBlock:
+            cidr: "192.168.1.0/24"  # Allow ingress from IP range 192.168.1.0/24
+    - from:
+        - podSelector:  # Allow ingress from pods with the label `app: cbpayment`
+            matchLabels:
+              app: cbpayment
+  egress:
+    - to:
+        - ipBlock:
+            cidr: "10.10.10.10/32"  # Allow egress to IP address 10.10.10.10
+        - ipBlock:
+            cidr: "172.16.0.0/16"  # Allow egress to IP range 172.16.0.0/16
+    - to:
+        - podSelector:  # Allow egress to pods with the label `app: cbpayment`
+            matchLabels:
+              app: cbpayment
+  policyTypes:
+    - Ingress
+    - Egress
