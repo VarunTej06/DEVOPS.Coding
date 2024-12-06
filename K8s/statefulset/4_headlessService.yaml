@@ -1,0 +1,17 @@
+# Step 4: Define a Headless Service for Redis (Optional but Recommended)
+# A Headless Service is used with StatefulSets to allow stable DNS names for each pod in the StatefulSet. 
+# This is required for Redis pods to communicate with each other in a clustered configuration or for direct pod-to-pod access.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: default  # Specify the namespace
+spec:
+  clusterIP: None  # Headless service (no cluster IP)
+  selector:
+    app: redis
+  ports:
+    - port: 6379
+      targetPort: 6379
+

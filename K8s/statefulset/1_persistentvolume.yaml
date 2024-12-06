@@ -1,0 +1,19 @@
+# Step 1: Define the PersistentVolume (PV)
+
+# This defines a storage volume that will be used by Redis pods. You can use dynamic provisioning or static provisioning. 
+# Here, we define a static PersistentVolume for Redis.
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: redis-pv
+spec:
+  capacity:
+    storage: 1Gi  # Size of the volume
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce  # The volume can be mounted by a single node
+  persistentVolumeReclaimPolicy: Retain  # What happens to the PV when it's released
+  storageClassName: standard  # You can use a specific storage class
+  hostPath:
+    path: "/mnt/data/redis"  # Path to the volume on the node

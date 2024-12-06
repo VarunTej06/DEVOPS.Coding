@@ -1,0 +1,47 @@
+# Step 3: Define the StatefulSet for Redis
+
+# StatefulSet: Ensures stable, unique network identifiers for each Redis pod. It provides ordered deployment and scaling.
+# PVC: A PersistentVolumeClaim is used to request storage resources for Redis data.
+# PV: A PersistentVolume represents a piece of storage in the Kubernetes cluster.
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis
+  namespace: default  # Specify the namespace
+spec:
+  serviceName: "redis"
+  replicas: 3  # Deploy 3 Redis replicas for high availability
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:latest  # Redis image (can specify a version)
+          ports:
+            - containerPort: 6379
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data  # Mount the PVC at /data
+  volumeClaimTemplates:
+    - metadata:
+        name: redis-data  # This must match the volumeMounts name
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+        storageClassName: standard
+
+# replicas: 3: This sets up 3 Redis pods for high availability.
+# serviceName: "redis": A headless service will be created with this name to allow DNS discovery of Redis pods (redis-0, redis-1, etc.).
+# volumeClaimTemplates: This automatically creates a PVC for each Redis pod. The PVCs are named redis-data-0, redis-data-1, and so on. The volume is mounted at /data inside each Redis container.
+# containerPort: 6379: Redis runs on port 6379 by default.
+# The volumeClaimTemplates in the StatefulSet will create individual PVCs for each pod. 
+# The PVCs are associated with the redis-data volume, which will use the specified storage class and size.

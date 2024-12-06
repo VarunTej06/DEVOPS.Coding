@@ -1,0 +1,53 @@
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: default
+spec:
+  clusterIP: None
+  selector:
+    app: redis
+  ports:
+    - port: 6379
+      targetPort: 6379
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis
+  namespace: default
+spec:
+  serviceName: "redis"
+  replicas: 3
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:latest
+          ports:
+            - containerPort: 6379
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: redis-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+        storageClassName: managed-premium  # For Azure Disk (use azurefile for Azure Files)
+
+# storageClassName: managed-premium: This specifies the Azure Disk storage class for dynamic provisioning. If you want to use Azure Files, replace managed-premium with azurefile.
+# volumeClaimTemplates: This part ensures each Redis pod gets its own PVC with the storage class and size specified. The PVCs are automatically created for each pod and bound to Azure Disks.
+# mountPath: /data: The PVC is mounted at /data inside each Redis pod, where Redis will store its data.

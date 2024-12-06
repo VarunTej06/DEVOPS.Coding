@@ -1,0 +1,15 @@
+# Step 2: Define the PersistentVolumeClaim (PVC)
+# This PVC will request storage from the defined PersistentVolume. The StatefulSet will automatically bind the pods to this PVC.
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pvc
+  namespace: default  # Specify the namespace
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi  # Size of storage requested
+  storageClassName: standard  # Must match the PV storage class
